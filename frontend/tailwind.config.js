@@ -1,0 +1,73 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        soilpilot: {
+          primary: '#2A7C13',
+          secondary: '#76C457',
+          cream: '#FFF8CF',
+          beige: '#FBE6C2',
+          hover: '#22650f',
+          dark: '#1c550d',
+          light: '#f4faee',
+          surface: '#fbfcf9',
+        },
+        portal: {
+          dark: '#2A7C13',
+          header: '#2A7C13',
+          active: '#76C457',
+          hover: '#22650f',
+          border: '#236910',
+          bg: '#fbfcf9',
+          card: '#ffffff',
+          accent: '#76C457',
+        },
+        gov: {
+          dark: '#2A7C13',
+          primary: '#2A7C13',
+          accent: '#76C457',
+          light: '#FFF8CF',
+          gold: '#FBE6C2',
+        },
+        primary: {
+          50: '#f4faee',
+          100: '#e6f5dc',
+          200: '#cdedb9',
+          300: '#a6de8b',
+          400: '#76C457',
+          500: '#2A7C13',
+          600: '#236910',
+          700: '#1c550d',
+          800: '#17440b',
+          900: '#123709',
+          950: '#091e04',
+        },
+        soil: {
+          50: '#FFF8CF',
+          100: '#FBE6C2',
+          200: '#f5d9a4',
+          300: '#dec2a8',
+          400: '#cca282',
+          500: '#ba8560',
+          600: '#a36c4a',
+          700: '#84533a',
+          800: '#694331',
+          900: '#54362a',
+          sand: '#f5deb3',
+          clay: '#cd853f',
+          loam: '#8b7355',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      boxShadow: {
+        card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04)',
+      },
+    },
+  },
+  plugins: [],
+}
