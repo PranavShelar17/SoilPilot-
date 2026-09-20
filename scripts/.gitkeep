@@ -1,0 +1,4 @@
+# Data import utility scripts will be created in Stage 4+.
+# Scripts: import_kml.py, import_kmz.py, import_shapefile.py,
+# import_geojson.py, import_soil_csv.py, import_soil_excel.py,
+# register_dsm_raster.py

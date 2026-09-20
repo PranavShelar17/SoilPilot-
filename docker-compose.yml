@@ -1,0 +1,100 @@
+# ============================================
+# DSM Soil Health Portal — Docker Compose
+# ============================================
+# Usage:
+#   docker compose up        (start all services)
+#   docker compose up -d     (start in background)
+#   docker compose down      (stop all services)
+#   docker compose logs -f   (view logs)
+# ============================================
+
+version: "3.9"
+
+services:
+  # ------------------------------------------
+  # PostgreSQL + PostGIS Database
+  # ------------------------------------------
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: dsm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-dsm_soil_health}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-postgis.sql:/docker-entrypoint-initdb.d/01-init-postgis.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-dsm_soil_health}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------
+  # FastAPI Backend
+  # ------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: dsm-backend
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dsm_soil_health}
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-secure-random-string-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS:-24}
+      - OTP_PROVIDER=${OTP_PROVIDER:-mock}
+      - OTP_EXPIRY_SECONDS=${OTP_EXPIRY_SECONDS:-300}
+      - OTP_MAX_ATTEMPTS=${OTP_MAX_ATTEMPTS:-3}
+      - OTP_COOLDOWN_SECONDS=${OTP_COOLDOWN_SECONDS:-60}
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-http://localhost:5173}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - STORAGE_PATH=/app/storage
+      - DEMO_MODE=${DEMO_MODE:-true}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./storage:/app/storage
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      uvicorn backend.app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+
+  # ------------------------------------------
+  # React Frontend (Vite Dev Server)
+  # ------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: dsm-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_MAP_STREETS_URL=${VITE_MAP_STREETS_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+      - VITE_MAP_STREETS_ATTRIBUTION=${VITE_MAP_STREETS_ATTRIBUTION:-© OpenStreetMap contributors}
+      - VITE_MAP_SATELLITE_URL=${VITE_MAP_SATELLITE_URL}
+      - VITE_MAP_SATELLITE_ATTRIBUTION=${VITE_MAP_SATELLITE_ATTRIBUTION:-© Esri}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  postgres_data:
+    driver: local
